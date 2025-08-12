@@ -1,7 +1,7 @@
 # AgileFlow AI 🤖✨
 
 <p align="center">
-  <strong>The intelligent Agile Scrum assistant that builds your project board for you.</strong>
+  <strong>Your intelligent Agile Scrum partner. Describe your project, and let GenAI build the board for you.</strong>
 </p>
 
 <p align="center">
@@ -14,9 +14,9 @@
 
 <p align="center">
   <a href="#-project-overview"><strong>Project Overview</strong></a> &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+  <a href="#-how-genai-is-used"><strong>How GenAI is Used</strong></a> &nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="#-tech-stack"><strong>Tech Stack</strong></a> &nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="#-core-features"><strong>Core Features</strong></a> &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-  <a href="#-how-it-works"><strong>How It Works</strong></a> &nbsp;&nbsp;&bull;&nbsp;&nbsp;
   <a href="#-getting-started"><strong>Getting Started</strong></a>
 </p>
 
@@ -24,9 +24,42 @@
 
 ## 🚀 Project Overview
 
-Tired of the manual grind of setting up a new project board? **AgileFlow AI** is here to revolutionize your workflow. This isn't just another project management tool; it's a **GenAI-powered partner** that kickstarts your Agile projects in seconds.
+Tired of the manual grind of setting up a new project board? **AgileFlow AI** revolutionizes your workflow by leveraging the power of Generative AI. This isn't just another project management tool; it's a **GenAI-powered partner** that understands your project goals and kickstarts your Agile process in seconds.
 
-Simply describe your project, and watch as AgileFlow AI intelligently generates a complete Kanban board with relevant columns and starter tasks. From there, manage your project with an intuitive drag-and-drop interface, track your progress with burndown charts, and even get AI-powered Agile coaching tips to keep your team on the right track.
+Simply provide a high-level description of your project, and watch as AgileFlow AI intelligently suggests user stories, constructs a complete Kanban board with relevant epics and tasks, assigns story points, and even provides ongoing agile coaching. It's designed to eliminate the initial friction of project setup, allowing you and your team to focus on what truly matters: building great products.
+
+## 🧠 How GenAI is Used
+
+The magic of AgileFlow AI lies in a multi-step, AI-driven workflow orchestrated by **Genkit**. We use carefully designed prompts and schemas to ensure the AI's output is structured, relevant, and immediately usable.
+
+### 1. AI-Powered User Story Suggestion
+The process begins by transforming a simple project idea into actionable user stories.
+- **Purpose**: To overcome "blank page" syndrome and provide a solid foundation for project planning.
+- **Workflow**:
+    1. You provide the project name, team members, and duration.
+    2. The application sends these details to a **GenAI model (Gemini)**, prompting it to act as an expert Scrum Master.
+    3. The AI generates a list of 5-8 relevant user stories in the standard "As a [user], I want [goal] so that [benefit]" format.
+    4. You are presented with these suggestions on a review screen, where you have full control to **add, edit, or delete** stories to perfectly match your vision.
+
+### 2. AI-Powered Scrum Board Initialization
+This is where the core value of AgileFlow AI shines. We turn your verified user stories into a fully structured project board.
+- **Purpose**: To automate the tedious process of creating epics, breaking down stories into tasks, estimating effort, and assigning work.
+- **Workflow**:
+    1. Once you approve the user stories, they are sent to a second, more complex AI prompt.
+    2. The AI is instructed to act as an expert Scrum Master and perform several actions at once:
+        - **Generate Columns**: Create Kanban columns that represent high-level features or epics derived from the stories.
+        - **Create Tasks**: Populate each column with smaller, actionable tasks needed to complete the feature.
+        - **Estimate Story Points**: Assign story points (1, 2, 3, 5, 8) to each task to represent its complexity.
+        - **Assign Team Members**: Intelligently distribute the tasks among the team members you provided.
+    3. The AI returns a structured JSON object, which is used to render a complete, interactive Kanban board.
+
+### 3. AI-Powered Contextual Agile Coaching
+To help your team stay on track, AgileFlow AI provides continuous, context-aware advice.
+- **Purpose**: To offer actionable best practices and improve your team's agile fluency.
+- **Workflow**:
+    1. At any point, you can click "Get Agile Tip".
+    2. The application sends your current project context (e.g., "Project Phase: Execution") to the AI.
+    3. The AI, acting as an agile assistant, provides a single, relevant tip and explains the **reasoning** behind its suggestion, helping you learn and adapt.
 
 ## 🛠️ Tech Stack
 
@@ -43,25 +76,16 @@ This project is built with a modern, powerful, and scalable tech stack to delive
 | **Drag & Drop** | **Native HTML5 Drag and Drop API** for a lightweight and performant interactive board.                                                                                                                |
 | **Charts** | [**Recharts**](https://recharts.org/) for creating beautiful and responsive data visualizations like the Burndown Chart.                                                                                |
 
-## ⚙️ Core Features
 
-- **🧠 AI-Powered Board Generation**: Input your project goals, and let the AI create a tailored Kanban board with columns and tasks.
-- **✋ Drag & Drop Interface**: Intuitively move tasks across columns to update their status.
-- **📅 Due Dates & Dependencies**: Easily set deadlines and link related tasks to manage complex workflows.
-- **📊 Burndown Charts**: Visualize your team's progress and stay on track to meet your sprint goals.
-- **💡 Agile Coach**: Get contextual, AI-generated tips to improve your agile practices based on your project's phase.
-- **🎨 Themed UI**: A sleek, modern interface with both light and dark modes.
+## ✨ Core Features
 
-## 🕹️ How It Works
-
-The magic of AgileFlow AI lies in its simple yet powerful workflow that connects a user-friendly frontend with a smart AI backend.
-
-1.  **Project Setup**: The user fills out a simple form with the project name, team members, and duration.
-2.  **AI Invocation**: The frontend calls a **Next.js Server Action** (`generateBoardAction`).
-3.  **Genkit Flow**: This action triggers the `initializeBoardFlow` in **Genkit**. The flow uses a carefully crafted prompt to instruct a Generative AI model to create a project structure.
-4.  **Data Hydration**: The server action receives the AI's response and enriches it by adding unique IDs to each column and task. This is critical for React's rendering and the drag-and-drop functionality.
-5.  **Board Rendering**: The complete board data is sent back to the client, where React renders the interactive `<ProjectBoard />`.
-6.  **Interactive Management**: The user can now drag tasks, set dates, and get agile tips, with all state changes managed seamlessly on the client.
+- **🧠 Intelligent Project Kickstart**: Go from idea to a fully-fleshed-out project board in under a minute.
+- **🤖 Automated Task Breakdown & Estimation**: Let AI handle the initial story point estimates and task assignments.
+- **✅ Human-in-the-Loop Verification**: You always have the final say. Edit, add, or remove AI suggestions before the board is built.
+- **✋ Intuitive Drag & Drop Interface**: Seamlessly manage your workflow by moving tasks across columns.
+- **📊 Burndown Charts**: Visualize your team's progress and ensure you're on track to meet sprint goals.
+- **💡 On-Demand Agile Coach**: Get contextual, AI-generated tips to improve your agile practices.
+- **🎨 Sleek, Themed UI**: A modern interface with both light and dark modes for your comfort.
 
 ## 🚀 Getting Started
 
@@ -101,5 +125,5 @@ Ready to launch your own AgileFlow AI instance? Follow these simple steps.
 ---
 
 <p align="center">
-  Made with ❤️ and a lot of ☕ by <a href="https://github.com/notkshitijsingh">@notkshitijsingh</a>
+  Made with ❤️ and a lot of ☕ by <a href="https://github.com/notkshitijsingh">notkshitijsingh</a>
 </p>
