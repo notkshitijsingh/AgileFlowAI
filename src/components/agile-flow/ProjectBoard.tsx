@@ -17,8 +17,8 @@ interface ProjectBoardProps {
 
 const statusOrder: Record<TaskStatus, number> = {
   'Blocked': 0,
-  'In Progress': 1,
-  'Open': 2,
+  'Open': 1,
+  'In Progress': 2,
   'Done': 3,
 };
 
@@ -122,7 +122,7 @@ export function ProjectBoard({ initialBoard, teamMembers, onBoardUpdate }: Proje
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 h-full items-start">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
       {sortedBoard.map((column) => (
         <Card 
           key={column.id} 

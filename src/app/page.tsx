@@ -59,9 +59,9 @@ const Dashboard = ({ board, setBoard, projectName, teamMembers, onReset }: { boa
     <SidebarProvider defaultOpen={false}>
       <div className="h-screen w-full flex flex-col">
         <DashboardHeader projectName={projectName} onReset={onReset} />
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex flex-1">
           <DashboardSidebar board={board} />
-          <SidebarInset className="flex-1 overflow-auto p-4 md:p-6">
+          <SidebarInset className="flex-1 overflow-y-auto p-4 md:p-6">
             <ProjectBoard initialBoard={board} teamMembers={teamMembers} onBoardUpdate={setBoard} />
           </SidebarInset>
         </div>
