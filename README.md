@@ -100,7 +100,7 @@ Ready to launch your own AgileFlow AI instance? Follow these simple steps.
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/notkshitijsingh/agileflow-ai.git
+    git clone https://github.com/notkshitijsingh/AgileFlowAI.git
     cd agileflow-ai
     ```
 
@@ -125,5 +125,5 @@ Ready to launch your own AgileFlow AI instance? Follow these simple steps.
 ---
 
 <p align="center">
-  Made with ❤️ and a lot of ☕ by <a href="https://github.com/notkshitijsingh">notkshitijsingh</a>
+  Made with ❤️ and a lot of ☕ by <a href="https://github.com/notkshitijsingh">@notkshitijsingh</a>
 </p>
