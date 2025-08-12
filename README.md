@@ -112,7 +112,7 @@ Ready to launch your own AgileFlow AI instance? Follow these simple steps.
 3.  **Set up your environment variables:**
     Create a `.env.local` file in the root of your project and add your AI provider API key (e.g., Google AI Studio).
     ```
-    GOOGLE_API_KEY="YOUR_API_KEY_HERE"
+    GEMINI_API_KEY="YOUR_API_KEY_HERE"
     ```
 
 4.  **Run the development server:**
