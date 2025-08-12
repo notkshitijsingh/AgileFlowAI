@@ -101,5 +101,5 @@ Ready to launch your own AgileFlow AI instance? Follow these simple steps.
 ---
 
 <p align="center">
-  Made with ❤️ and a lot of ☕ by [@notkshitijsingh](https://github.com/notkshitijsingh)
+  Made with ❤️ and a lot of ☕ by <a href="https://github.com/notkshitijsingh">@notkshitijsingh</a>
 </p>
