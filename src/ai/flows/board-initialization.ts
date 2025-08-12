@@ -35,7 +35,7 @@ const BoardInitializationOutputSchema = z.object({
           name: z.string().describe('The name of the task (a small, actionable item).'),
           description: z.string().describe('A brief description of the task.'),
           storyPoints: z.number().describe('An estimated story point value for the task, from 1 to 8, based on complexity.'),
-          assignedTo: z.string().optional().describe('The name of the team member this task is assigned to.')
+          assignedTo: z.string().optional().describe('The name of the team member this task is assigned to. Default to unassigned.')
         })
       ).describe('A list of tasks for this column.')
     })
@@ -57,7 +57,7 @@ const initializeBoardPrompt = ai.definePrompt({
 The columns should represent high-level features or epics derived from the stories. Each column should contain a list of smaller, actionable tasks required to implement that feature.
 For each column, populate the 'description' field with the primary user story it relates to.
 For each task, provide an estimated story point value between 1 and 8. A higher number means more complexity, effort, and/or uncertainty. Use a simplified Fibonacci-like scale (1, 2, 3, 5, 8).
-Intelligently assign each task to a team member from the provided list. If the list is empty, do not assign anyone.
+All tasks should be unassigned by default. Do not assign anyone.
 The response must be valid JSON matching the BoardInitializationOutputSchema schema.
 
 Project Name: {{{projectName}}}

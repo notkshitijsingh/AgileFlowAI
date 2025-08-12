@@ -3,19 +3,20 @@
 
 import { useState } from "react";
 import { RocketIcon, PanelLeftOpen, PanelLeftClose } from "lucide-react";
-import type { Board } from "@/lib/types";
-import { generateBoardAction } from "@/app/actions/board-actions";
-import { ProjectSetupForm, type ProjectSetupFormValues } from "@/components/agile-flow/ProjectSetupForm";
-import { StoryReview, type StoryReviewFormValues } from "@/components/agile-flow/StoryReview";
+import type { Board, RawColumn, Task } from "@/lib/types";
 import { ProjectBoard } from "@/components/agile-flow/ProjectBoard";
 import { BurndownChart } from "@/components/agile-flow/BurndownChart";
 import { AgileTip } from "@/components/agile-flow/AgileTip";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+import { generateBoardAction } from "@/app/actions/board-actions";
+import { ProjectSetupForm, type ProjectSetupFormValues } from "@/components/agile-flow/ProjectSetupForm";
+import { StoryReview, type StoryReviewFormValues } from "@/components/agile-flow/StoryReview";
 import { suggestStoriesAction } from "@/app/actions/story-actions";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 type SetupStep = 'details' | 'stories' | 'board';
+
 
 const DashboardHeader = ({ projectName, onReset }: { projectName: string, onReset: () => void}) => {
     const { setOpen } = useSidebar();
@@ -53,34 +54,32 @@ const DashboardSidebar = () => {
     )
 }
 
-const Dashboard = ({ board, projectName, onReset, teamMembers }: { board: Board, projectName: string, onReset: () => void, teamMembers: string[] }) => {
+const Dashboard = ({ board, projectName, teamMembers, onReset }: { board: Board, projectName: string, teamMembers: string[], onReset: () => void }) => {
   return (
-    <SidebarProvider>
-        <div className="h-screen w-full flex flex-col">
-          <DashboardHeader projectName={projectName} onReset={onReset} />
-          <div className="flex-1 flex overflow-hidden">
-            <DashboardSidebar />
-            <SidebarInset className="flex-1 overflow-auto p-4 md:p-6">
-              <ProjectBoard initialBoard={board!} teamMembers={teamMembers}/>
-            </SidebarInset>
-          </div>
+    <SidebarProvider defaultOpen={false}>
+      <div className="h-screen w-full flex flex-col">
+        <DashboardHeader projectName={projectName} onReset={onReset} />
+        <div className="flex-1 flex overflow-hidden">
+          <DashboardSidebar />
+          <SidebarInset className="flex-1 overflow-auto p-4 md:p-6">
+            <ProjectBoard initialBoard={board} teamMembers={teamMembers} />
+          </SidebarInset>
         </div>
-      </SidebarProvider>
+      </div>
+    </SidebarProvider>
   )
 }
 
 export default function Home() {
-  const [board, setBoard] = useState<Board | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [projectName, setProjectName] = useState("");
   const [setupStep, setSetupStep] = useState<SetupStep>('details');
   const [projectDetails, setProjectDetails] = useState<ProjectSetupFormValues | null>(null);
   const [suggestedStories, setSuggestedStories] = useState<string[]>([]);
+  const [board, setBoard] = useState<Board | null>(null);
   const { toast } = useToast();
 
   const handleSuggestStories = async (values: ProjectSetupFormValues) => {
     setIsLoading(true);
-    setProjectName(values.projectName);
     setProjectDetails(values);
     try {
       const response = await suggestStoriesAction(values);
@@ -102,35 +101,48 @@ export default function Home() {
     if (!projectDetails) return;
     setIsLoading(true);
     try {
-      const newBoard = await generateBoardAction({
+      const rawBoard: RawColumn[] = await generateBoardAction({
         ...projectDetails,
         stories: values.stories,
       });
-      // The board from the action doesn't have IDs. We'll let the ProjectBoard component handle that.
-      setBoard(newBoard as Board); 
+
+      // Add client-side IDs to prevent hydration errors and ensure consistency
+      const boardWithIds: Board = rawBoard.map(column => {
+        const columnId = crypto.randomUUID();
+        return {
+          ...column,
+          id: columnId,
+          tasks: column.tasks.map(task => ({
+            ...task,
+            id: crypto.randomUUID(),
+            columnId: columnId,
+          })),
+        };
+      });
+
+      setBoard(boardWithIds);
       setSetupStep('board');
     } catch (error) {
       console.error("Failed to generate board:", error);
-      toast({
+       toast({
         variant: "destructive",
         title: "Failed to Generate Board",
-        description: "There was an error creating the board. Please check the stories and try again.",
+        description: "The AI model is currently overloaded. Please check your stories and try again in a moment.",
       });
     } finally {
       setIsLoading(false);
     }
   };
   
-  const handleReset = () => {
-    setBoard(null);
-    setProjectName("");
-    setSetupStep('details');
-    setProjectDetails(null);
-    setSuggestedStories([]);
-  }
-  
   const handleBackToDetails = () => {
     setSetupStep('details');
+  }
+
+  const handleReset = () => {
+    setSetupStep('details');
+    setBoard(null);
+    setProjectDetails(null);
+    setSuggestedStories([]);
   }
 
   const renderContent = () => {
@@ -162,10 +174,11 @@ export default function Home() {
           </main>
         );
       case 'board':
-        const teamMembers = projectDetails?.teamMembers.split(',').map(tm => tm.trim()).filter(Boolean) || [];
-        return (
-          <Dashboard board={board!} projectName={projectName} onReset={handleReset} teamMembers={teamMembers} />
-        );
+        if (board && projectDetails) {
+            const teamMembers = projectDetails.teamMembers.split(',').map(m => m.trim());
+            return <Dashboard board={board} projectName={projectDetails.projectName} teamMembers={teamMembers} onReset={handleReset} />;
+        }
+        return null; // Or a loading/error state
     }
   }
   
