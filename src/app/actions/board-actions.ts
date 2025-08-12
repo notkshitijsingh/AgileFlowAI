@@ -4,21 +4,20 @@ import { initializeBoard, type BoardInitializationInput } from '@/ai/flows/board
 import type { Board } from '@/lib/types';
 import { randomUUID } from 'crypto';
 
-export async function generateBoardAction(input: BoardInitializationInput): Promise<Board> {
+export async function generateBoardAction(input: BoardInitializationInput): Promise<Omit<Board, 'id'>> {
   const aiResponse = await initializeBoard(input);
 
-  const boardWithIds: Board = aiResponse.columns.map((column) => {
-    const columnId = randomUUID();
+  // Note: IDs are no longer added here. They will be added on the client-side.
+  const boardWithoutIds = aiResponse.columns.map((column) => {
     return {
-      id: columnId,
       name: column.name,
+      description: column.description,
       tasks: column.tasks.map((task) => ({
         ...task,
-        id: randomUUID(),
-        columnId: columnId,
+        status: 'Open' as const,
       })),
     };
   });
 
-  return boardWithIds;
+  return boardWithoutIds;
 }

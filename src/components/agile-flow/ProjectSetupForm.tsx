@@ -8,7 +8,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import type { BoardInitializationInput } from "@/ai/flows/board-initialization";
 
 const formSchema = z.object({
   projectName: z.string().min(2, {
@@ -90,7 +89,7 @@ export function ProjectSetupForm({ onSubmit, isLoading }: ProjectSetupFormProps)
           <CardFooter>
             <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "Generating Board..." : "Generate Project Board"}
+              {isLoading ? "Generating Stories..." : "Suggest User Stories"}
             </Button>
           </CardFooter>
         </form>

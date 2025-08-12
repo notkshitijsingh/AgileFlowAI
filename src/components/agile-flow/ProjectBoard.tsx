@@ -1,19 +1,52 @@
 "use client";
 
-import { useState, DragEvent } from "react";
-import type { Board, Task } from "@/lib/types";
+import { useState, DragEvent, useMemo, useEffect } from "react";
+import { PlusCircle } from "lucide-react";
+import type { Board, Task, TaskStatus, Column } from "@/lib/types";
 import { TaskCard } from "./TaskCard";
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../ui/card";
+import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 
 interface ProjectBoardProps {
-  initialBoard: Board;
+  initialBoard: Omit<Column, 'id' | 'tasks'> & { tasks: Omit<Task, 'id' | 'columnId'>[] }[];
+  teamMembers: string[];
 }
 
-export function ProjectBoard({ initialBoard }: ProjectBoardProps) {
-  const [board, setBoard] = useState<Board>(initialBoard);
+const statusOrder: Record<TaskStatus, number> = {
+  'Blocked': 0,
+  'In Progress': 1,
+  'Open': 2,
+  'Done': 3,
+};
+
+// This function is now responsible for adding unique IDs to the board
+const initializeBoardWithIds = (boardData: ProjectBoardProps['initialBoard']): Board => {
+  return boardData.map((column) => {
+    const columnId = crypto.randomUUID();
+    return {
+      ...column,
+      id: columnId,
+      tasks: column.tasks.map((task) => ({
+        ...task,
+        id: crypto.randomUUID(),
+        columnId: columnId,
+      })),
+    };
+  });
+};
+
+
+export function ProjectBoard({ initialBoard, teamMembers }: ProjectBoardProps) {
+  const [board, setBoard] = useState<Board>(() => initializeBoardWithIds(initialBoard));
   const [draggedItem, setDraggedItem] = useState<{ taskId: string; sourceColumnId: string } | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+
+  // This effect handles cases where the initialBoard prop might change.
+  useEffect(() => {
+    setBoard(initializeBoardWithIds(initialBoard));
+  }, [initialBoard]);
+
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>, taskId: string, sourceColumnId: string) => {
     e.dataTransfer.effectAllowed = 'move';
@@ -78,9 +111,40 @@ export function ProjectBoard({ initialBoard }: ProjectBoardProps) {
     );
   };
 
+  const handleAddTask = (columnId: string) => {
+    const newTask: Task = {
+      id: crypto.randomUUID(),
+      name: "New Feature",
+      description: "A new feature description.",
+      columnId,
+      status: "Open",
+      storyPoints: 1,
+    };
+
+    setBoard(currentBoard => 
+      currentBoard.map(column => 
+        column.id === columnId
+          ? { ...column, tasks: [...column.tasks, newTask] }
+          : column
+      )
+    );
+  };
+  
+  const sortedBoard = useMemo(() => {
+    if (!board) return [];
+    return board.map(column => ({
+      ...column,
+      tasks: [...column.tasks].sort((a, b) => statusOrder[a.status] - statusOrder[b.status])
+    }));
+  }, [board]);
+
+  if (!board) {
+    return <div>Loading board...</div>;
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 h-full items-start">
-      {board.map((column) => (
+      {sortedBoard.map((column) => (
         <Card 
           key={column.id} 
           className={cn(
@@ -98,6 +162,7 @@ export function ProjectBoard({ initialBoard }: ProjectBoardProps) {
                 {column.tasks.length}
               </span>
             </CardTitle>
+            <CardDescription className="text-sm text-muted-foreground pt-1">{column.description}</CardDescription>
           </CardHeader>
           <CardContent className="p-4 space-y-4 overflow-y-auto flex-1">
             {column.tasks.map((task) => (
@@ -110,6 +175,7 @@ export function ProjectBoard({ initialBoard }: ProjectBoardProps) {
                 <TaskCard 
                   task={task} 
                   allTasks={board.flatMap(c => c.tasks)} 
+                  teamMembers={teamMembers}
                   onUpdate={handleUpdateTask}
                   onDelete={handleDeleteTask}
                 />
@@ -117,10 +183,16 @@ export function ProjectBoard({ initialBoard }: ProjectBoardProps) {
             ))}
              {column.tasks.length === 0 && (
                 <div className="text-center text-muted-foreground py-10">
-                    <p>Drop tasks here</p>
+                    <p>Drop features here</p>
                 </div>
              )}
           </CardContent>
+          <div className="p-4 pt-0 mt-auto">
+            <Button variant="outline" size="sm" className="w-full" onClick={() => handleAddTask(column.id)}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Feature
+            </Button>
+          </div>
         </Card>
       ))}
     </div>

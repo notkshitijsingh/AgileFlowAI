@@ -1,0 +1,90 @@
+# AgileFlow AI: Project Explanation
+
+This document provides a detailed breakdown of the AgileFlow AI project, a GenAI-powered Agile Scrum project management application.
+
+## 1. Project Overview
+
+AgileFlow AI is a web application built with Next.js and React that helps users kickstart and manage agile projects. Its core functionality revolves around using Generative AI to automate the initial setup of a project board and to provide contextual agile coaching.
+
+The user journey is straightforward:
+1.  **Project Setup**: The user provides basic project details (name, team members, duration).
+2.  **AI-Powered Board Generation**: The application uses this input to call an AI model, which generates a structured Kanban-style board with relevant columns (e.g., "To Do", "In Progress", "Done") and a set of initial tasks.
+3.  **Interactive Project Board**: The user can then interact with this board, moving tasks between columns via drag-and-drop, setting due dates, and managing dependencies.
+4.  **Agile Insights**: The application includes features like a burndown chart for tracking progress and an "Agile Tip" generator that provides AI-driven advice based on the project's context.
+
+## 2. Tech Stack
+
+- **Framework**: Next.js (with App Router)
+- **Language**: TypeScript
+- **UI Library**: React
+- **Styling**: Tailwind CSS with ShadCN UI components for a consistent and modern look and feel.
+- **AI/Backend Logic**: Genkit is used for creating AI flows, which are exposed to the frontend via Next.js Server Actions.
+- **Form Management**: React Hook Form with Zod for validation.
+- **Drag & Drop**: Implemented using native HTML5 Drag and Drop APIs.
+- **Charts**: Recharts for data visualization (specifically the Burndown Chart).
+
+## 3. File-by-File Breakdown & Workflow
+
+### 3.1. Main Application Logic (`src/app/page.tsx`)
+
+This is the primary client-side component that orchestrates the user experience.
+
+- **State Management**: It uses `useState` to manage the core application state:
+    - `board`: Holds the generated project board data. It's `null` initially, which determines whether to show the setup form or the project board.
+    - `isLoading`: Tracks the loading state while the AI is generating the board.
+    - `projectName`: Stores the project name to display in the header.
+- **Workflow**:
+    1.  If `board` is `null`, it renders the `<ProjectSetupForm />`.
+    2.  When the form is submitted, the `handleGenerateBoard` function is called. This function sets `isLoading` to `true` and calls the `generateBoardAction` server action.
+    3.  Once the server action returns the newly created board, it updates the `board` state, causing the UI to re-render and display the `<ProjectBoard />`.
+    4.  If the board is present, it renders the main project interface, including the header, a sidebar with the `<BurndownChart />` and `<AgileTip />`, and the main content area with the `<ProjectBoard />`.
+
+### 3.2. AI and Backend (`src/ai/` & `src/app/actions/`)
+
+The AI logic is separated into Genkit flows and exposed via server actions.
+
+- **`src/ai/genkit.ts`**: Initializes the Genkit instance with the Google AI plugin, making it available for use in flows.
+- **Board Generation Flow (`src/ai/flows/board-initialization.ts`)**:
+    - Defines the input schema (`BoardInitializationInputSchema`) and output schema (`BoardInitializationOutputSchema`) using Zod. This provides structured I/O for the AI model.
+    - The `initializeBoardPrompt` instructs the AI model on how to behave ("You are a project management expert") and what to do: generate columns and tasks based on the provided project name, team, and duration.
+    - The `initializeBoardFlow` wraps this prompt. It's the main Genkit flow that executes the AI generation.
+- **Board Generation Action (`src/app/actions/board-actions.ts`)**:
+    - The `generateBoardAction` server action is what the frontend calls.
+    - It calls the `initializeBoard` flow to get the AI-generated board structure.
+    - **Crucially**, it then processes this AI response, using `randomUUID` to add unique `id` fields to each column and task. This is essential for React's key management and for tracking items during drag-and-drop operations.
+    - It returns the fully-formed `Board` object to the client.
+- **Agile Tip Flow (`src/ai/flows/agile-tips.ts`)**:
+    - Similar to the board flow, it defines input (project phase, user interaction) and output (tip, reasoning) schemas.
+    - The prompt asks the AI to act as an agile assistant and provide a relevant tip.
+- **Agile Tip Action (`src/app/actions/agile-actions.ts`)**:
+    - A simple server action wrapper that calls the `getAgileTip` flow and returns the result.
+
+### 3.3. Core UI Components (`src/components/agile-flow/`)
+
+- **`ProjectSetupForm.tsx`**:
+    - Uses `react-hook-form` and `zod` for robust form handling and validation.
+    - When submitted, it passes the validated form values to the `onSubmit` prop provided by `page.tsx`.
+- **`ProjectBoard.tsx`**:
+    - Receives the `initialBoard` as a prop and manages its state locally.
+    - Implements the drag-and-drop functionality:
+        - `handleDragStart`: Records which task is being dragged.
+        - `handleDragOver`: Tracks which column the task is being dragged over to provide visual feedback (highlighting the column).
+        - `handleDrop`: The main logic. It updates the board state by moving the dragged task from the source column to the target column.
+    - It maps over the `board` state to render a column for each entry, and within each column, it renders a `<TaskCard />` for each task.
+- **`TaskCard.tsx`**:
+    - Represents an individual task. It's draggable itself.
+    - Displays task name and description.
+    - Includes popovers for setting a due date (`<Calendar />`) and linking task dependencies (`<Select />`).
+    - Contains logic for updating and deleting tasks, calling back to the parent `ProjectBoard` component to update the overall state.
+- **`BurndownChart.tsx`**:
+    - Uses the `recharts` library to display a line chart.
+    - Currently, it uses static, hard-coded data (`burndownData`) to simulate a sprint burndown. In a real application, this would be dynamically generated based on task completion over time.
+- **`AgileTip.tsx`**:
+    - Contains a button that, when clicked, calls the `getAgileTipAction` server action.
+    - It manages its own loading state and displays the AI-generated tip and reasoning in an `<Alert />` component.
+
+## 4. Styling and UI (`src/app/globals.css`, `tailwind.config.ts`)
+
+- **Theme**: The application uses a CSS variable-based theme defined in `src/app/globals.css`. This allows for easy switching between light and dark modes by changing the HSL values for colors like `--background`, `--foreground`, `--primary`, etc.
+- **Component Library**: ShadCN UI provides the building blocks for the interface (e.g., `Card`, `Button`, `Input`, `Popover`). These components are pre-styled with Tailwind CSS and are highly composable.
+- **Layout**: The main layout is defined in `src/app/layout.tsx`. The project also uses a sophisticated, reusable `<Sidebar />` component (`src/components/ui/sidebar.tsx`) that is responsive and collapsible.
