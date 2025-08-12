@@ -1,16 +1,18 @@
+
 "use client";
 
-import { useState, DragEvent, useMemo, useEffect } from "react";
+import { useState, DragEvent, useMemo } from "react";
 import { PlusCircle } from "lucide-react";
-import type { Board, Task, TaskStatus, Column } from "@/lib/types";
+import type { Board, Task, TaskStatus } from "@/lib/types";
 import { TaskCard } from "./TaskCard";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../ui/card";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 
 interface ProjectBoardProps {
-  initialBoard: Omit<Column, 'id' | 'tasks'> & { tasks: Omit<Task, 'id' | 'columnId'>[] }[];
+  initialBoard: Board;
   teamMembers: string[];
+  onBoardUpdate: (board: Board) => void;
 }
 
 const statusOrder: Record<TaskStatus, number> = {
@@ -20,33 +22,15 @@ const statusOrder: Record<TaskStatus, number> = {
   'Done': 3,
 };
 
-// This function is now responsible for adding unique IDs to the board
-const initializeBoardWithIds = (boardData: ProjectBoardProps['initialBoard']): Board => {
-  return boardData.map((column) => {
-    const columnId = crypto.randomUUID();
-    return {
-      ...column,
-      id: columnId,
-      tasks: column.tasks.map((task) => ({
-        ...task,
-        id: crypto.randomUUID(),
-        columnId: columnId,
-      })),
-    };
-  });
-};
-
-
-export function ProjectBoard({ initialBoard, teamMembers }: ProjectBoardProps) {
-  const [board, setBoard] = useState<Board>(() => initializeBoardWithIds(initialBoard));
+export function ProjectBoard({ initialBoard, teamMembers, onBoardUpdate }: ProjectBoardProps) {
+  const [board, setBoard] = useState<Board>(initialBoard);
   const [draggedItem, setDraggedItem] = useState<{ taskId: string; sourceColumnId: string } | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
-  // This effect handles cases where the initialBoard prop might change.
-  useEffect(() => {
-    setBoard(initializeBoardWithIds(initialBoard));
-  }, [initialBoard]);
-
+  const updateBoard = (newBoard: Board) => {
+    setBoard(newBoard);
+    onBoardUpdate(newBoard);
+  };
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>, taskId: string, sourceColumnId: string) => {
     e.dataTransfer.effectAllowed = 'move';
@@ -76,39 +60,35 @@ export function ProjectBoard({ initialBoard, teamMembers }: ProjectBoardProps) {
       return;
     }
 
-    setBoard((prevBoard) => {
-      const newBoard = JSON.parse(JSON.stringify(prevBoard));
-      const sourceColumn = newBoard.find((col: any) => col.id === sourceColumnId);
-      const targetColumn = newBoard.find((col: any) => col.id === targetColumnId);
-      const taskIndex = sourceColumn.tasks.findIndex((task: any) => task.id === taskId);
-      const [movedTask] = sourceColumn.tasks.splice(taskIndex, 1);
-      movedTask.columnId = targetColumnId;
-      targetColumn.tasks.push(movedTask);
-      return newBoard;
-    });
-
+    const newBoard = JSON.parse(JSON.stringify(board));
+    const sourceColumn = newBoard.find((col: any) => col.id === sourceColumnId);
+    const targetColumn = newBoard.find((col: any) => col.id === targetColumnId);
+    const taskIndex = sourceColumn.tasks.findIndex((task: any) => task.id === taskId);
+    const [movedTask] = sourceColumn.tasks.splice(taskIndex, 1);
+    movedTask.columnId = targetColumnId;
+    targetColumn.tasks.push(movedTask);
+    updateBoard(newBoard);
+    
     setDraggedItem(null);
     setDragOverColumn(null);
   };
   
   const handleUpdateTask = (updatedTask: Task) => {
-    setBoard(currentBoard => 
-      currentBoard.map(column => 
+    const newBoard = board.map(column => 
         column.id === updatedTask.columnId 
           ? { ...column, tasks: column.tasks.map(task => task.id === updatedTask.id ? updatedTask : task) }
           : column
-      )
-    );
+      );
+    updateBoard(newBoard);
   };
   
   const handleDeleteTask = (taskId: string, columnId: string) => {
-    setBoard(currentBoard => 
-      currentBoard.map(column => 
+    const newBoard = board.map(column => 
         column.id === columnId
           ? { ...column, tasks: column.tasks.filter(task => task.id !== taskId) }
           : column
-      )
-    );
+      );
+    updateBoard(newBoard);
   };
 
   const handleAddTask = (columnId: string) => {
@@ -119,19 +99,18 @@ export function ProjectBoard({ initialBoard, teamMembers }: ProjectBoardProps) {
       columnId,
       status: "Open",
       storyPoints: 1,
+      assignedTo: undefined
     };
 
-    setBoard(currentBoard => 
-      currentBoard.map(column => 
+    const newBoard = board.map(column => 
         column.id === columnId
           ? { ...column, tasks: [...column.tasks, newTask] }
           : column
-      )
-    );
+      );
+    updateBoard(newBoard);
   };
   
   const sortedBoard = useMemo(() => {
-    if (!board) return [];
     return board.map(column => ({
       ...column,
       tasks: [...column.tasks].sort((a, b) => statusOrder[a.status] - statusOrder[b.status])

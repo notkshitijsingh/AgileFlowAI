@@ -160,8 +160,8 @@ export function TaskCard({ task, allTasks, teamMembers, onUpdate, onDelete }: Ta
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between items-center text-sm">
-        <div className="flex gap-1 items-center">
+      <CardFooter className="flex flex-wrap justify-between items-center text-sm gap-y-2">
+        <div className="flex gap-1 items-center flex-wrap">
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -215,7 +215,7 @@ export function TaskCard({ task, allTasks, teamMembers, onUpdate, onDelete }: Ta
               </Button>
             )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 px-2">

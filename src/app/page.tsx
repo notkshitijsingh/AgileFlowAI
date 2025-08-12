@@ -34,7 +34,7 @@ const DashboardHeader = ({ projectName, onReset }: { projectName: string, onRese
     )
 }
 
-const DashboardSidebar = () => {
+const DashboardSidebar = ({ board }: { board: Board | null }) => {
     const { setOpen } = useSidebar();
     return (
         <Sidebar collapsible="icon">
@@ -47,22 +47,22 @@ const DashboardSidebar = () => {
             </SidebarHeader>
             <div className="p-2 space-y-4">
               <BurndownChart />
-              <AgileTip />
+              <AgileTip board={board} />
             </div>
           </SidebarContent>
         </Sidebar>
     )
 }
 
-const Dashboard = ({ board, projectName, teamMembers, onReset }: { board: Board, projectName: string, teamMembers: string[], onReset: () => void }) => {
+const Dashboard = ({ board, setBoard, projectName, teamMembers, onReset }: { board: Board, setBoard: (board: Board) => void, projectName: string, teamMembers: string[], onReset: () => void }) => {
   return (
     <SidebarProvider defaultOpen={false}>
       <div className="h-screen w-full flex flex-col">
         <DashboardHeader projectName={projectName} onReset={onReset} />
         <div className="flex-1 flex overflow-hidden">
-          <DashboardSidebar />
+          <DashboardSidebar board={board} />
           <SidebarInset className="flex-1 overflow-auto p-4 md:p-6">
-            <ProjectBoard initialBoard={board} teamMembers={teamMembers} />
+            <ProjectBoard initialBoard={board} teamMembers={teamMembers} onBoardUpdate={setBoard} />
           </SidebarInset>
         </div>
       </div>
@@ -176,7 +176,7 @@ export default function Home() {
       case 'board':
         if (board && projectDetails) {
             const teamMembers = projectDetails.teamMembers.split(',').map(m => m.trim());
-            return <Dashboard board={board} projectName={projectDetails.projectName} teamMembers={teamMembers} onReset={handleReset} />;
+            return <Dashboard board={board} setBoard={setBoard} projectName={projectDetails.projectName} teamMembers={teamMembers} onReset={handleReset} />;
         }
         return null; // Or a loading/error state
     }
